@@ -27,12 +27,12 @@ function gameboard(){
 				return o;
 			})(),
 			X_tile	: (function(){
-				context.fillRect(0,0,100,100);
+				context.fillRect(0,0,120,120);
 				context.beginPath();
 				context.moveTo(20,20);
-				context.lineTo(80,80);
-				context.moveTo(80,20);
-				context.lineTo(20,80);
+				context.lineTo(100,100);
+				context.moveTo(100,20);
+				context.lineTo(20,100);
 				context.stroke();
 				var x	= new Image();
 				x.src	= canvas.toDataURL();
@@ -45,10 +45,21 @@ function gameboard(){
 				this.currentTile = this[tile];
 			},
 			getCurrentTile : function(){
-				return this.currentTile;
+				if(this.currentTile === this.BLANK_tile){
+					return "BLANK_tile";
+				} else if(this.currentTile === this.X_tile){
+					return "X_tile";
+				} else if(this.currentTile === this.O_tile){
+					return "O_tile";
+				} else {
+					return "ERR";
+				}
 			},
 			getCoords : function(){
 				return {x: this.x, y: this.y};
+			},
+			hasData	: function(){
+				 return this.currentTile !== this.BLANK_tile && this.currentTile !== null;
 			}
 
 		}//end returned tile object
@@ -59,25 +70,53 @@ function gameboard(){
 		canvas		: document.createElement("canvas"),
 		context		: null,
 		tiles		: [],
+		currentPlayer : "X_tile",
 		init : function(){
-				this.context	= this.canvas.getContext("2d"),
-				this.tiles		= (function(){
+				var currentContext 	= this,
+					resetButton 	= document.createElement("div");
+					this.context	= this.canvas.getContext("2d"),
+					this.tiles		= (function(){
 							var tmpArray = [];
 							for(var i = 0; i < 9; i++){
 								var x = i % 3 * 140 + 20,
 									y = Math.floor(i/3) * 140 + 20;
 									tmpArray.push(_tile(x,y))
-									tmpArray[i].setCurrentTile("O_tile");
 							}
 							return tmpArray;
-						})();
+						})(),
+					this.reset();
+					resetButton.addEventListener('mousedown', currentContext.reset.bind(this));
+					resetButton.id = "resetButton";
+					resetButton.innerHTML = "Reset";
+
 				this.canvas.width = this.canvas.height = 440;
+				this.canvas.addEventListener('mousedown', function(){
+								var targetElement 	= event.target,
+									px				= event.clientX - targetElement.offsetLeft,
+									py				= event.clientY - targetElement.offsetTop;
+
+									if(px % 140 >= 20 && py % 140 >= 20){
+										var idx = Math.floor(px/140) + (Math.floor(py/140) * 3);
+
+										currentContext.tiles[idx].setCurrentTile(currentContext.currentPlayer);
+										currentContext.evaluateBoard();
+										currentContext.currentPlayer = currentContext.currentPlayer === "X_tile" ? "O_tile" : "X_tile";
+									}
+							});
 			document.body.appendChild(this.canvas);
+			document.body.appendChild(resetButton);
 			this.tick();
+		},
+		reset: function(){
+			this.tiles.map(function(x){
+				x.setCurrentTile("BLANK_tile");
+			});
+			this.currentPlayer = "X_tile";
+			
 		},
 		draw : function(tile){
 			//console.log(tile.getCurrentTile());
-			var currentTile = tile.getCurrentTile(),
+			var currentTile = tile.currentTile,
 				coords		= tile.getCoords(),
 				x			= coords.x,
 				y			= coords.y;
@@ -91,6 +130,7 @@ function gameboard(){
 		animate : function(){
 			this.isAnimating = true;
 			//animate
+			this.anim = 1;
 			this.isAnimating = false;
 		},
 		render : function(){
@@ -101,6 +141,34 @@ function gameboard(){
 				this.draw(this.tiles[i]);
 			}
 		},
+		checkIfBoardIsFull: function(){
+			return this.tiles.map(function(x){
+				return x.hasData() ? 1 : 0;
+			}).join('');
+		},
+		evaluateBoard: function(){
+			var context 		= this,
+				winningStates	= [[1,1,1,0,0,0,0,0,0],[0,0,0,1,1,1,0,0,0],[0,0,0,0,0,0,1,1,1],[1,0,0,0,1,0,0,0,1],[0,0,1,0,1,0,1,0,0],[1,0,0,1,0,0,1,0,0],[0,1,0,0,1,0,0,1,0],[0,0,1,0,0,1,0,0,1]],
+				currentState 	= this.tiles.map(function(x){
+				 if(x.getCurrentTile() === context.currentPlayer){
+				 	return 1;
+				 } else {
+				 	return 0;
+				 }
+			});
+				for(var i = winningStates.length;i--;){
+					if()
+				}
+		},
+		getLegalMoves: function(){
+			var tmpArray = []
+			this.tiles.map(function(x, idx){
+				if(!x.hasData()){
+					tmpArray.push(idx);				
+				} 
+			});
+			return tmpArray;
+		}
 	}
 }
 
