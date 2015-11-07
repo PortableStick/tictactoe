@@ -65,12 +65,12 @@ function gameboard(){
 		}//end returned tile object
 	}
 	return {
-		anim 		: 0,
-		isAnimating : false,
-		canvas		: document.createElement("canvas"),
-		context		: null,
-		tiles		: [],
-		currentPlayer : "X_tile",
+		anim 			: 0,
+		isAnimating 	: false,
+		canvas			: document.createElement("canvas"),
+		context			: null,
+		tiles			: [],
+		currentPlayer 	: "X_tile",
 		init : function(){
 				var currentContext 	= this,
 					resetButton 	= document.createElement("div");
@@ -148,16 +148,29 @@ function gameboard(){
 		},
 		evaluateBoard: function(){
 			var context 		= this,
-				winningStates	= [[1,1,1,0,0,0,0,0,0],[0,0,0,1,1,1,0,0,0],[0,0,0,0,0,0,1,1,1],[1,0,0,0,1,0,0,0,1],[0,0,1,0,1,0,1,0,0],[1,0,0,1,0,0,1,0,0],[0,1,0,0,1,0,0,1,0],[0,0,1,0,0,1,0,0,1]],
+				winningStates	= [	"111000000", "000111000", "000000111",
+									"100100100", "001001001", "010010010",
+									"001010100", "100010001" ],
 				currentState 	= this.tiles.map(function(x){
-				 if(x.getCurrentTile() === context.currentPlayer){
-				 	return 1;
-				 } else {
-				 	return 0;
-				 }
-			});
-				for(var i = winningStates.length;i--;){
-					if()
+					 if(x.getCurrentTile() === context.currentPlayer){
+					 	return 1;
+					 } else {
+					 	return 0;
+					 }
+				});
+				winningStates = winningStates.map(function(x){
+					return parseInt(x, 2);
+				});
+				currentState = currentState.join('');
+				currentState = parseInt(currentState, 2);
+				for(var i = 0; i < winningStates.length; i++){
+					var comparison = winningStates[i] & currentState;
+					if(comparison === winningStates[i]){
+						console.log("A winner is you, " + this.currentPlayer + "!");
+					}
+				}
+				if(this.getLegalMoves().length === 0){
+					console.log("We have a tie!");
 				}
 		},
 		getLegalMoves: function(){
