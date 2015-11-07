@@ -62,8 +62,6 @@ function gameboard(){
 		}//end returned tile object
 	}
 	return {
-		anim 			: 0,
-		isAnimating 	: false,
 		canvas			: document.createElement("canvas"),
 		context			: null,
 		tiles			: [],
@@ -112,8 +110,8 @@ function gameboard(){
 						})();
 					this.reset();
 					resetButton.addEventListener('mousedown', currentContext.reset.bind(this));
-					resetButton.id = "resetButton";
-					resetButton.innerHTML = "Reset";
+					resetButton.id 			= "resetButton";
+					resetButton.innerHTML 	= "Reset";
 
 				this.canvas.width = this.canvas.height = 440;
 				this.canvas.addEventListener('mousedown', function(){
@@ -125,7 +123,7 @@ function gameboard(){
 										var idx = Math.floor(px/140) + (Math.floor(py/140) * 3);
 										console.log(currentContext.currentPlayer);
 										currentContext.tiles[idx].setCurrentTile(currentContext.currentPlayer);
-										currentContext.evaluateBoard();
+										currentContext.evaluateBoard(currentContext.tiles, currentContext.currentPlayer);
 										currentContext.currentPlayer = currentContext.currentPlayer === "X_tile" ? "O_tile" : "X_tile";
 									}
 							});
@@ -152,12 +150,6 @@ function gameboard(){
 			this.render();
 			window.requestAnimationFrame(this.tick.bind(this));
 		},
-		animate : function(){
-			this.isAnimating = true;
-			//animate
-			this.anim = 1;
-			this.isAnimating = false;
-		},
 		render : function(){
 			//clear the canvas
 			this.context.clearRect(0,0,this.canvas.width,this.canvas.height);
@@ -166,36 +158,37 @@ function gameboard(){
 				this.draw(this.tiles[i]);
 			}
 		},
-		evaluateBoard: function(){
-			var context 		= this,
-				winningStates	= [	"111000000", "000111000", "000000111",
+		evaluateBoard: function(gameStateArray, currentPlayer){
+			var winningStates	= [	"111000000", "000111000", "000000111",
 									"100100100", "001001001", "010010010",
-									"001010100", "100010001" ],
-				currentState 	= this.tiles.map(function(x){
-					 if(x.getCurrentTile() === context.currentPlayer){
+									"001010100", "100010001" ].map(function(x){
+																	return parseInt(x, 2);
+																}),
+				currentState 	= gameStateArray.map(function(x){
+					 if(x.getCurrentTile() === currentPlayer){
 					 	return 1;
 					 } else {
 					 	return 0;
 					 }
-				});
-				winningStates = winningStates.map(function(x){
-					return parseInt(x, 2);
-				});
-				currentState = currentState.join('');
+				}).join('');
+				// winningStates = winningStates.map(function(x){
+				// 	return parseInt(x, 2);
+				// });
+				//currentState = currentState.join('');
 				currentState = parseInt(currentState, 2);
 				for(var i = 0; i < winningStates.length; i++){
 					var comparison = winningStates[i] & currentState;
 					if(comparison === winningStates[i]){
-						console.log("A winner is you, " + this.currentPlayer + "!");
+						console.log("A winner is you, " + currentPlayer + "!");
 					}
 				}
-				if(this.getLegalMoves().length === 0){
+				if(this.getLegalMoves(gameStateArray).length === 0){
 					console.log("We have a tie!");
 				}
 		},
-		getLegalMoves: function(){
+		getLegalMoves: function(gameStateArray){
 			var tmpArray = []
-			this.tiles.map(function(x, idx){
+			gameStateArray.map(function(x, idx){
 				if(!x.hasData()){
 					tmpArray.push(idx);				
 				} 
