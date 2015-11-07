@@ -67,34 +67,39 @@ function gameboard(){
 		canvas			: document.createElement("canvas"),
 		context			: null,
 		tiles			: [],
-		currentPlayer 	: "X_tile",
+		currentPlayer 	: null,
 		gameMode		: null, //1P or 2P,
 		depth			: 0,
 		init : function(){
-				//Modal stuff
-				var beginButton		= document.getElementById('begin');
-					beginButton.addEventListener('mousedown', (function(){
-						var context = this;
-						return  function(){
+				var currentContext 	= this,
+
+				//Modal window stuff
+					beginButton		= document.getElementById('begin');
+					beginButton.addEventListener('mousedown', function(){
 									var modal 				= document.getElementById('modal'),
 										gameModeSetting		= document.getElementsByName('game_mode'),
-										difficulty			= document.getElementsByName('difficulty');
-										modal.style.opacity = 0;
+										difficulty			= document.getElementsByName('difficulty'),
+										playerChoice		= document.getElementsByName('player');
+										modal.style.display = 'none';
 										for(var i = 0; i < gameModeSetting.length; i++){
 											if(gameModeSetting[i].checked){
-												context.gameMode = gameModeSetting[i].value;
+												currentContext.gameMode = gameModeSetting[i].value;
 											}
 										}
 										for(var i = 0; i < difficulty.length; i++){
 											if(difficulty[i].checked){
-												context.depth = difficulty[i].value;
+												currentContext.depth = difficulty[i].value;
 											}
 										}
-								}
-					})());
+										for(var i = 0; i < playerChoice.length; i++){
+											if(playerChoice[i].checked){
+												currentContext.currentPlayer = playerChoice[i].value;
+											}
+										}
+								});
 				//Gameboard stuff
-				var currentContext 	= this,
-					resetButton 	= document.createElement("div");
+
+				var	resetButton 	= document.createElement("div");
 					this.context	= this.canvas.getContext("2d");
 					this.tiles		= (function(){
 							var tmpArray = [];
@@ -118,7 +123,7 @@ function gameboard(){
 
 									if(px % 140 >= 20 && py % 140 >= 20){
 										var idx = Math.floor(px/140) + (Math.floor(py/140) * 3);
-
+										console.log(currentContext.currentPlayer);
 										currentContext.tiles[idx].setCurrentTile(currentContext.currentPlayer);
 										currentContext.evaluateBoard();
 										currentContext.currentPlayer = currentContext.currentPlayer === "X_tile" ? "O_tile" : "X_tile";
