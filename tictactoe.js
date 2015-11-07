@@ -51,12 +51,9 @@ function gameboard(){
 					return "X_tile";
 				} else if(this.currentTile === this.O_tile){
 					return "O_tile";
-				} else {
+				} else{
 					return "ERR";
 				}
-			},
-			getCoords : function(){
-				return {x: this.x, y: this.y};
 			},
 			hasData	: function(){
 				 return this.currentTile !== this.BLANK_tile && this.currentTile !== null;
@@ -71,19 +68,43 @@ function gameboard(){
 		context			: null,
 		tiles			: [],
 		currentPlayer 	: "X_tile",
+		gameMode		: null, //1P or 2P,
+		depth			: 0,
 		init : function(){
+				//Modal stuff
+				var beginButton		= document.getElementById('begin');
+					beginButton.addEventListener('mousedown', (function(){
+						var context = this;
+						return  function(){
+									var modal 				= document.getElementById('modal'),
+										gameModeSetting		= document.getElementsByName('game_mode'),
+										difficulty			= document.getElementsByName('difficulty');
+										modal.style.opacity = 0;
+										for(var i = 0; i < gameModeSetting.length; i++){
+											if(gameModeSetting[i].checked){
+												context.gameMode = gameModeSetting[i].value;
+											}
+										}
+										for(var i = 0; i < difficulty.length; i++){
+											if(difficulty[i].checked){
+												context.depth = difficulty[i].value;
+											}
+										}
+								}
+					})());
+				//Gameboard stuff
 				var currentContext 	= this,
 					resetButton 	= document.createElement("div");
-					this.context	= this.canvas.getContext("2d"),
+					this.context	= this.canvas.getContext("2d");
 					this.tiles		= (function(){
 							var tmpArray = [];
 							for(var i = 0; i < 9; i++){
 								var x = i % 3 * 140 + 20,
 									y = Math.floor(i/3) * 140 + 20;
-									tmpArray.push(_tile(x,y))
+									tmpArray.push(_tile(x,y));
 							}
 							return tmpArray;
-						})(),
+						})();
 					this.reset();
 					resetButton.addEventListener('mousedown', currentContext.reset.bind(this));
 					resetButton.id = "resetButton";
@@ -117,9 +138,8 @@ function gameboard(){
 		draw : function(tile){
 			//console.log(tile.getCurrentTile());
 			var currentTile = tile.currentTile,
-				coords		= tile.getCoords(),
-				x			= coords.x,
-				y			= coords.y;
+				x			= tile.x,
+				y			= tile.y;
 				
 			this.context.drawImage(currentTile,x,y);
 		},
@@ -140,11 +160,6 @@ function gameboard(){
 			for(var i = this.tiles.length;i--;){
 				this.draw(this.tiles[i]);
 			}
-		},
-		checkIfBoardIsFull: function(){
-			return this.tiles.map(function(x){
-				return x.hasData() ? 1 : 0;
-			}).join('');
 		},
 		evaluateBoard: function(){
 			var context 		= this,
