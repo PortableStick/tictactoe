@@ -78,7 +78,10 @@ function gameboard(){
 										gameModeSetting		= document.getElementsByName('game_mode'),
 										difficulty			= document.getElementsByName('difficulty'),
 										playerChoice		= document.getElementsByName('player');
-										modal.style.display = 'none';
+										modal.style.opacity	= 0;
+										setTimeout(function(){
+											modal.style.display = 'none';
+										}, 400)
 										for(var i = 0; i < gameModeSetting.length; i++){
 											if(gameModeSetting[i].checked){
 												currentContext.gameMode = gameModeSetting[i].value;
