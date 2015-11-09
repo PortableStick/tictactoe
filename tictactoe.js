@@ -70,34 +70,39 @@ function gameboard(){
 		depth			: 0,
 		init : function(){
 				var currentContext 	= this,
-
+					
 				//Modal window stuff
-					beginButton		= document.getElementById('begin');
+					beginButton		= document.getElementById('begin'),
+					newGameBtn		= document.getElementById('newGame');
+
+					newGameBtn.addEventListener('mousedown', currentContext.reset.bind(this));
 					beginButton.addEventListener('mousedown', function(){
-									var modal 				= document.getElementById('modal'),
-										gameModeSetting		= document.getElementsByName('game_mode'),
-										difficulty			= document.getElementsByName('difficulty'),
-										playerChoice		= document.getElementsByName('player');
-										modal.style.opacity	= 0;
-										setTimeout(function(){
-											modal.style.display = 'none';
-										}, 400)
-										for(var i = 0; i < gameModeSetting.length; i++){
-											if(gameModeSetting[i].checked){
-												currentContext.gameMode = gameModeSetting[i].value;
-											}
-										}
-										for(var i = 0; i < difficulty.length; i++){
-											if(difficulty[i].checked){
-												currentContext.depth = difficulty[i].value;
-											}
-										}
-										for(var i = 0; i < playerChoice.length; i++){
-											if(playerChoice[i].checked){
-												currentContext.currentPlayer = playerChoice[i].value;
-											}
-										}
-								});
+							var modal 				= document.getElementById('modal'),
+								gameModeSetting		= document.getElementsByName('game_mode'),
+								difficulty			= document.getElementsByName('difficulty'),
+								playerChoice		= document.getElementsByName('player'),
+								inputFields			= document.getElementById('input');
+								modal.style.opacity	= 0;
+								setTimeout(function(){
+									modal.style.display 		= 'none';
+									inputFields.style.display 	= 'none';
+								}, 400)
+								for(var i = 0; i < gameModeSetting.length; i++){
+									if(gameModeSetting[i].checked){
+										currentContext.gameMode = gameModeSetting[i].value;
+									}
+								}
+								for(var i = 0; i < difficulty.length; i++){
+									if(difficulty[i].checked){
+										currentContext.depth = difficulty[i].value;
+									}
+								}
+								for(var i = 0; i < playerChoice.length; i++){
+									if(playerChoice[i].checked){
+										currentContext.currentPlayer = playerChoice[i].value;
+									}
+								}
+						});
 				//Gameboard stuff
 
 				var	resetButton 	= document.createElement("div");
@@ -114,6 +119,7 @@ function gameboard(){
 					this.reset();
 					resetButton.addEventListener('mousedown', currentContext.reset.bind(this));
 					resetButton.id 			= "resetButton";
+					resetButton.className	= "btn";
 					resetButton.innerHTML 	= "Reset";
 
 				this.canvas.width = this.canvas.height = 440;
@@ -124,9 +130,13 @@ function gameboard(){
 
 									if(px % 140 >= 20 && py % 140 >= 20){
 										var idx = Math.floor(px/140) + (Math.floor(py/140) * 3);
-										console.log(currentContext.currentPlayer);
 										currentContext.tiles[idx].setCurrentTile(currentContext.currentPlayer);
-										currentContext.evaluateBoard(currentContext.tiles, currentContext.currentPlayer);
+										var result = currentContext.evaluateBoard(currentContext.tiles, currentContext.currentPlayer);
+
+										if(result){
+											currentContext.endGame(result);
+										}
+
 										currentContext.currentPlayer = currentContext.currentPlayer === "X_tile" ? "O_tile" : "X_tile";
 									}
 							});
@@ -139,6 +149,14 @@ function gameboard(){
 				x.setCurrentTile("BLANK_tile");
 			});
 			this.currentPlayer = "X_tile";
+		var	modal 				= document.getElementById('modal'),
+			inputFields			= document.getElementById('input'),
+			endGame				= document.getElementById('endgame');
+			endgame.style.display		= "none";
+			modal.style.opacity 		= 1;
+			modal.style.display 		= "inline-block";
+			modal.style.margin			= "auto";
+			inputFields.style.display 	= "inline-block";
 			
 		},
 		draw : function(tile){
@@ -174,19 +192,23 @@ function gameboard(){
 					 	return 0;
 					 }
 				}).join('');
-				// winningStates = winningStates.map(function(x){
-				// 	return parseInt(x, 2);
-				// });
-				//currentState = currentState.join('');
 				currentState = parseInt(currentState, 2);
 				for(var i = 0; i < winningStates.length; i++){
 					var comparison = winningStates[i] & currentState;
 					if(comparison === winningStates[i]){
-						console.log("A winner is you, " + currentPlayer + "!");
+						if(currentPlayer === "X_tile"){
+							currentPlayer = "X";
+						} else {
+							currentPlayer = "O";
+						}
+						return currentPlayer + " wins!";
+						
+
 					}
 				}
 				if(this.getLegalMoves(gameStateArray).length === 0){
-					console.log("We have a tie!");
+					return "Tie game!";
+					
 				}
 		},
 		getLegalMoves: function(gameStateArray){
@@ -197,6 +219,18 @@ function gameboard(){
 				} 
 			});
 			return tmpArray;
+		},
+		endGame: function(message){
+			var modal 						= document.getElementById('modal'),
+				endGame						= document.getElementById('endGame'),
+				messageSpot					= document.getElementById('message');
+
+				modal.style.display 		= "inline-block";
+				modal.style.opacity			= 1;
+				endgame.style.opacity		= 1;
+				endgame.style.display		= "inline-block";
+				messageSpot.style.display	= "inline-block";
+				messageSpot.innerHTML 		= message;
 		}
 	}
 }

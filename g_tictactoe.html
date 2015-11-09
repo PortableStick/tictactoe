@@ -51,6 +51,7 @@
 		}
 
 		div#begin.btn{
+			font-size: 1.2em;
 			background-color: #aaa;
 			border: 1px solid #333;
 			display: block;
@@ -59,10 +60,39 @@
 			user-select: none;
 			-webkit-user-select:  none;
 		}
-
+		div#resetButton{
+			position: absolute;
+			top: 10vh;
+			right: 50vw;
+			margin:  auto;
+		}
 		div.btn:hover{
 			cursor: default;
 		}
+		div.btn{	
+			background-color: steelblue;
+			color: white;
+			font-size: 2em;
+			border: 3px solid black;
+			display: inline-block;	
+			padding: 10px;
+			border-radius: 5px;
+			user-select: none;
+			-webkit-user-select:  none;
+		}
+		div.btn:hover{
+			cursor: default;
+		}
+		div#endgame{
+			/*display: none;*/
+			font-size: 2em;
+			background-color: white;
+			position: absolute;
+			top: 30vh;
+			right: 45vw;
+			padding: 25px;
+		}
+		
 	</style>
 	<script src="tictactoe.js"></script>
 	<script>
@@ -94,6 +124,11 @@
 				<div class="btn" id="begin">Begin</div>
 			</form>
 			
+		</div><!--input-->
+		<div id="endgame">
+			<div id="message"></div>
+			<div class="cta">Try again?</div>
+			<div class="btn" id="newGame">New Game</div>
 		</div>
 	</div>
 </body>
