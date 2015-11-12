@@ -1,4 +1,4 @@
-function gameboard(){
+function Gameboard(){
 	function _tile(x, y){
 		var canvas 			= document.createElement("canvas"),
 			context 		= canvas.getContext("2d");
@@ -65,99 +65,29 @@ function gameboard(){
 		canvas			: document.createElement("canvas"),
 		context			: null,
 		tiles			: [],
-		currentPlayer 	: null,
-		gameMode		: null, //1P or 2P,
-		depth			: 0,
 		init : function(){
-				var currentContext 	= this,
-					
-				//Modal window stuff
-					beginButton		= document.getElementById('begin'),
-					newGameBtn		= document.getElementById('newGame');
-
-					newGameBtn.addEventListener('mousedown', currentContext.reset.bind(this));
-					beginButton.addEventListener('mousedown', function(){
-							var modal 				= document.getElementById('modal'),
-								gameModeSetting		= document.getElementsByName('game_mode'),
-								difficulty			= document.getElementsByName('difficulty'),
-								playerChoice		= document.getElementsByName('player'),
-								inputFields			= document.getElementById('input');
-								modal.style.opacity	= 0;
-								setTimeout(function(){
-									modal.style.display 		= 'none';
-									inputFields.style.display 	= 'none';
-								}, 400)
-								for(var i = 0; i < gameModeSetting.length; i++){
-									if(gameModeSetting[i].checked){
-										currentContext.gameMode = gameModeSetting[i].value;
-									}
-								}
-								for(var i = 0; i < difficulty.length; i++){
-									if(difficulty[i].checked){
-										currentContext.depth = difficulty[i].value;
-									}
-								}
-								for(var i = 0; i < playerChoice.length; i++){
-									if(playerChoice[i].checked){
-										currentContext.currentPlayer = playerChoice[i].value;
-									}
-								}
-						});
-				//Gameboard stuff
-
-				var	resetButton 	= document.createElement("div");
-					this.context	= this.canvas.getContext("2d");
-					this.tiles		= (function(){
-							var tmpArray = [];
-							for(var i = 0; i < 9; i++){
-								var x = i % 3 * 140 + 20,
-									y = Math.floor(i/3) * 140 + 20;
-									tmpArray.push(_tile(x,y));
-							}
-							return tmpArray;
-						})();
-					this.reset();
-					resetButton.addEventListener('mousedown', currentContext.reset.bind(this));
-					resetButton.id 			= "resetButton";
-					resetButton.className	= "btn";
-					resetButton.innerHTML 	= "Reset";
-
 				this.canvas.width = this.canvas.height = 440;
-				this.canvas.addEventListener('mousedown', function(){
-								var targetElement 	= event.target,
-									px				= event.clientX - targetElement.offsetLeft,
-									py				= event.clientY - targetElement.offsetTop;
-
-									if(px % 140 >= 20 && py % 140 >= 20){
-										var idx = Math.floor(px/140) + (Math.floor(py/140) * 3);
-										currentContext.tiles[idx].setCurrentTile(currentContext.currentPlayer);
-										var result = currentContext.evaluateBoard(currentContext.tiles, currentContext.currentPlayer);
-
-										if(result){
-											currentContext.endGame(result);
-										}
-
-										currentContext.currentPlayer = currentContext.currentPlayer === "X_tile" ? "O_tile" : "X_tile";
-									}
-							});
-			document.body.appendChild(this.canvas);
-			document.body.appendChild(resetButton);
-			this.tick();
+				this.context	= this.canvas.getContext("2d");
+				this.tiles		= (function(){
+						var tmpArray = [];
+						for(var i = 0; i < 9; i++){
+							var x = i % 3 * 140 + 20,
+								y = Math.floor(i/3) * 140 + 20;
+								tmpArray.push(_tile(x,y));
+						}
+						return tmpArray;
+					})();
+				this.resetBoard();									
+				document.body.appendChild(this.canvas);
+				this.tick();
 		},
-		reset: function(){
+		setTile: function(tileIdx, newTile){
+			this.tiles[tileIdx].setCurrentTile(newTile);
+		},
+		resetBoard: function(){
 			this.tiles.map(function(x){
 				x.setCurrentTile("BLANK_tile");
 			});
-			this.currentPlayer = "X_tile";
-		var	modal 				= document.getElementById('modal'),
-			inputFields			= document.getElementById('input'),
-			endGame				= document.getElementById('endgame');
-			endgame.style.display		= "none";
-			modal.style.opacity 		= 1;
-			modal.style.display 		= "inline-block";
-			modal.style.margin			= "auto";
-			inputFields.style.display 	= "inline-block";
-			
 		},
 		draw : function(tile){
 			//console.log(tile.getCurrentTile());
@@ -178,6 +108,76 @@ function gameboard(){
 			for(var i = this.tiles.length;i--;){
 				this.draw(this.tiles[i]);
 			}
+		}
+	}
+}
+
+function aiPlayer(){
+	return {
+
+	}
+}
+
+function GameController(){
+	return{
+		aiOpponent: aiPlayer(),
+		gameboard: Gameboard(),
+		gameMode: null,
+		playerTile: null,
+		depth: 0,
+		currentPlayer: "X_tile",
+		init: function(){
+			$('#startModal').show();
+			$("#gameModeChoice").change(function(){
+				if($("#gameModeChoice option:selected")[0].value === "2P"){
+					$("#difficulty").hide();
+				} else {
+					$("#difficulty").show();
+				}
+			});
+			$('#startButton').click(function(){
+				$('#startModal').hide();
+				var options = $('#gameOptions').serializeArray();
+				controller.gameMode 	= options[0].value;
+				controller.depth		= options[1].value;
+				controller.playerTile 	= options[2].value;
+			});
+			this.gameboard.init();
+			$('#resetButton').click(this.resetGame.bind(this));
+			var board = this.gameboard,
+				controller	= this;
+				board.canvas.addEventListener('mousedown', function(){
+									var targetElement 			= event.target,
+										xPosition				= event.clientX - targetElement.offsetLeft,
+										yPosition				= event.clientY - targetElement.offsetTop;
+		
+										if(xPosition % 140 >= 20 && yPosition % 140 >= 20){
+											var idx = Math.floor(xPosition/140) + (Math.floor(yPosition/140) * 3);
+
+											board.setTile(idx, controller.currentPlayer);
+											var result = controller.evaluateBoard(board.tiles, controller.currentPlayer);
+
+											if(result){
+												controller.endGame(result);
+											}
+
+											if(controller.gameMode === "1P"){
+
+											} else if(controller.gameMode === "2P"){
+												controller.currentPlayer = controller.currentPlayer === "X_tile" ? "O_tile" : "X_tile";
+											}
+										}
+								});
+		},
+		resetGame: function(){
+			this.gameboard.resetBoard();
+			this.currentPlayer  = "X_tile";
+			$("#startModal").show();
+			$("#endModal").hide();
+		},
+		endGame: function(message){
+			$('#endModal').show();
+			$('#endMessage').html(message);
 		},
 		evaluateBoard: function(gameStateArray, currentPlayer){
 			var winningStates	= [	"111000000", "000111000", "000000111",
@@ -202,42 +202,20 @@ function gameboard(){
 							currentPlayer = "O";
 						}
 						return currentPlayer + " wins!";
-						
-
 					}
 				}
-				if(this.getLegalMoves(gameStateArray).length === 0){
-					return "Tie game!";
-					
+				if(this.board.getLegalMoves(gameStateArray).length === 0){
+					return "Tie game!";					
 				}
 		},
 		getLegalMoves: function(gameStateArray){
-			var tmpArray = []
+			var tmpArray = [];
 			gameStateArray.map(function(x, idx){
 				if(!x.hasData()){
 					tmpArray.push(idx);				
 				} 
 			});
 			return tmpArray;
-		},
-		endGame: function(message){
-			var modal 						= document.getElementById('modal'),
-				endGame						= document.getElementById('endGame'),
-				messageSpot					= document.getElementById('message');
-
-				modal.style.display 		= "inline-block";
-				modal.style.opacity			= 1;
-				endgame.style.opacity		= 1;
-				endgame.style.display		= "inline-block";
-				messageSpot.style.display	= "inline-block";
-				messageSpot.innerHTML 		= message;
 		}
-	}
-}
-
-function aiPlayer(gameboard){
-	return {
-		gameboard : gameboard
-
 	}
 }

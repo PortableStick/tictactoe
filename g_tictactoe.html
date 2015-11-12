@@ -3,7 +3,13 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Proof of concept - Tic Tac Toe</title>
+	<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
 	<style>
+	*{
+		user-select:none;
+		-webkit-user-select:none;
+		-moz-user-select:none;
+	}
 		canvas{
 			border: 1px solid black;
 			position: absolute;
@@ -21,115 +27,69 @@
 			font-size: 2em;
 		}
 
-		#modal{
-			position: fixed;
-			top: 0;
-			bottom: 0;
-			right: 0;
-			left: 0;
-			background: rgba(0,0,0,0.6);
-			z-index: 999999;
-			opacity: 1;
-			transition: opacity 400ms ease-out;
-		}
-
-		#modal div{
-			text-align: center;
-			max-width: 500px;
-			margin: auto;
-			margin-top: 10%;
-		}
-
-		#modal div form{
-			background-color: #fff;
-			font-size: 2em;
-			padding: 10px;
-		}
-
-		#modal div form button{
-			font-size: 1em;
-		}
-
-		div#begin.btn{
-			font-size: 1.2em;
-			background-color: #aaa;
-			border: 1px solid #333;
-			display: block;
-			width: 100px;
-			color:  white;
-			user-select: none;
-			-webkit-user-select:  none;
-		}
-		div#resetButton{
-			position: absolute;
-			top: 10vh;
-			right: 50vw;
-			margin:  auto;
-		}
-		div.btn:hover{
-			cursor: default;
-		}
-		div.btn{	
-			background-color: steelblue;
-			color: white;
-			font-size: 2em;
-			border: 3px solid black;
-			display: inline-block;	
-			padding: 10px;
-			border-radius: 5px;
-			user-select: none;
-			-webkit-user-select:  none;
-		}
-		div.btn:hover{
-			cursor: default;
-		}
-		div#endgame{
-			/*display: none;*/
-			font-size: 2em;
-			background-color: white;
-			position: absolute;
-			top: 30vh;
-			right: 45vw;
-			padding: 25px;
-		}
 		
 	</style>
 	<script src="tictactoe.js"></script>
 	<script>
 		window.onload = function main(){
-			var game = gameboard();
+			var game = GameController();
 			game.init();
 		}
 	</script>
 </head>
 <body>
-	<div id="modal">
-		<div id="input">
-			<form>
-				<input type="radio" name="game_mode" value="1P" checked>1 Player (against A.I.)
-				<input type="radio" name="game_mode" value="2P">2 Player
-				<br>
-			</form>
-			<form>
-				<input type="radio" name="difficulty" value="0"> Easy
-				<input type="radio" name="difficulty" value="2" checked> Medium
-				<input type="radio" name="difficulty" value="4"> Hard
-			</form>
-			<form>
-				<input type="radio" name="player" value="X_tile" checked> Player = X
-				<br>
-				<input type="radio" name="player" value="O_tile"> Player = O				
-			</form>
-			<form >
-				<div class="btn" id="begin">Begin</div>
-			</form>
-			
-		</div><!--input-->
-		<div id="endgame">
-			<div id="message"></div>
-			<div class="cta">Try again?</div>
-			<div class="btn" id="newGame">New Game</div>
+	<div id="startModal" class="modal">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					Play some Tic-Tac-Toe!
+				</div>
+				<div class="modal-body">
+					<form id="gameOptions">
+						<div class="form-group">
+							<select name="gamemode" id="gameModeChoice" class="form-control">
+								<option value="1P" selected>Single-Player Against A.I.</option>
+								<option value="2P">Two-Player Against Human</option>
+							</select>
+						</div>
+						<div class="form-group" id="difficulty">
+							<label for="difficulty">
+								<select name="difficulty">
+									<option value="0">Easy</option>
+									<option value="2">Medium</option>
+									<option value="4">Hard</option>								
+								</select>
+							</label>
+						</div>
+						<div class="form-group">
+							<label for="playerTile" class="radio-inline">
+								<input type="radio" name="playerTile" value="X_tile" checked>X
+							</label>
+							<label for="playerTile" class="radio-inline">
+								<input type="radio" name="playerTile" value="O_tile">O
+							</label>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-success" id="startButton">Go!</button>
+				</div>
+			</div>
 		</div>
 	</div>
+	<div class="modal" id="endModal">
+		<div class="modal-dialog">
+			<div class="modal-content">`
+				<div class="modal-body">
+					<h1 id="endMessage">Endgame message!</h1>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-primary" id="resetButton">Try again?</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 </body>
 </html>
