@@ -4,94 +4,6 @@
 	<meta charset="UTF-8">
 	<title>Proof of concept - Tic Tac Toe</title>
 	<style>
-		canvas{
-			border: 1px solid black;
-			position: absolute;
-			margin: auto;
-			top: 0;
-			bottom: 0;
-			right: 0;
-			left: 0;
-		}
-
-		canvas div{
-			display: block;
-			border: 2px black solid;
-			border-radius: 5px;
-			font-size: 2em;
-		}
-
-		#modal{
-			position: fixed;
-			top: 0;
-			bottom: 0;
-			right: 0;
-			left: 0;
-			background: rgba(0,0,0,0.6);
-			z-index: 999999;
-			opacity: 1;
-			transition: opacity 400ms ease-out;
-		}
-
-		#modal div{
-			text-align: center;
-			max-width: 500px;
-			margin: auto;
-			margin-top: 10%;
-		}
-
-		#modal div form{
-			background-color: #fff;
-			font-size: 2em;
-			padding: 10px;
-		}
-
-		#modal div form button{
-			font-size: 1em;
-		}
-
-		div#begin.btn{
-			font-size: 1.2em;
-			background-color: #aaa;
-			border: 1px solid #333;
-			display: block;
-			width: 100px;
-			color:  white;
-			user-select: none;
-			-webkit-user-select:  none;
-		}
-		div#resetButton{
-			position: absolute;
-			top: 10vh;
-			right: 50vw;
-			margin:  auto;
-		}
-		div.btn:hover{
-			cursor: default;
-		}
-		div.btn{	
-			background-color: steelblue;
-			color: white;
-			font-size: 2em;
-			border: 3px solid black;
-			display: inline-block;	
-			padding: 10px;
-			border-radius: 5px;
-			user-select: none;
-			-webkit-user-select:  none;
-		}
-		div.btn:hover{
-			cursor: default;
-		}
-		div#endgame{
-			/*display: none;*/
-			font-size: 2em;
-			background-color: white;
-			position: absolute;
-			top: 30vh;
-			right: 45vw;
-			padding: 25px;
-		}
 		
 	</style>
 	<script src="tictactoe.js"></script>
@@ -103,33 +15,6 @@
 	</script>
 </head>
 <body>
-	<div id="modal">
-		<div id="input">
-			<form>
-				<input type="radio" name="game_mode" value="1P" checked>1 Player (against A.I.)
-				<input type="radio" name="game_mode" value="2P">2 Player
-				<br>
-			</form>
-			<form>
-				<input type="radio" name="difficulty" value="0"> Easy
-				<input type="radio" name="difficulty" value="2" checked> Medium
-				<input type="radio" name="difficulty" value="4"> Hard
-			</form>
-			<form>
-				<input type="radio" name="player" value="X_tile" checked> Player = X
-				<br>
-				<input type="radio" name="player" value="O_tile"> Player = O				
-			</form>
-			<form >
-				<div class="btn" id="begin">Begin</div>
-			</form>
-			
-		</div><!--input-->
-		<div id="endgame">
-			<div id="message"></div>
-			<div class="cta">Try again?</div>
-			<div class="btn" id="newGame">New Game</div>
-		</div>
-	</div>
+
 </body>
 </html>

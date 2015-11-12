@@ -65,47 +65,9 @@ function gameboard(){
 		canvas			: document.createElement("canvas"),
 		context			: null,
 		tiles			: [],
-		currentPlayer 	: null,
-		gameMode		: null, //1P or 2P,
-		depth			: 0,
 		init : function(){
-				var currentContext 	= this,
-					
-				//Modal window stuff
-					beginButton		= document.getElementById('begin'),
-					newGameBtn		= document.getElementById('newGame');
-
-					newGameBtn.addEventListener('mousedown', currentContext.reset.bind(this));
-					beginButton.addEventListener('mousedown', function(){
-							var modal 				= document.getElementById('modal'),
-								gameModeSetting		= document.getElementsByName('game_mode'),
-								difficulty			= document.getElementsByName('difficulty'),
-								playerChoice		= document.getElementsByName('player'),
-								inputFields			= document.getElementById('input');
-								modal.style.opacity	= 0;
-								setTimeout(function(){
-									modal.style.display 		= 'none';
-									inputFields.style.display 	= 'none';
-								}, 400)
-								for(var i = 0; i < gameModeSetting.length; i++){
-									if(gameModeSetting[i].checked){
-										currentContext.gameMode = gameModeSetting[i].value;
-									}
-								}
-								for(var i = 0; i < difficulty.length; i++){
-									if(difficulty[i].checked){
-										currentContext.depth = difficulty[i].value;
-									}
-								}
-								for(var i = 0; i < playerChoice.length; i++){
-									if(playerChoice[i].checked){
-										currentContext.currentPlayer = playerChoice[i].value;
-									}
-								}
-						});
-				//Gameboard stuff
-
-				var	resetButton 	= document.createElement("div");
+				var currentContext 	= this;
+				
 					this.context	= this.canvas.getContext("2d");
 					this.tiles		= (function(){
 							var tmpArray = [];
@@ -113,51 +75,26 @@ function gameboard(){
 								var x = i % 3 * 140 + 20,
 									y = Math.floor(i/3) * 140 + 20;
 									tmpArray.push(_tile(x,y));
+									console.log(tmpArray[i]);
 							}
 							return tmpArray;
 						})();
-					this.reset();
-					resetButton.addEventListener('mousedown', currentContext.reset.bind(this));
-					resetButton.id 			= "resetButton";
-					resetButton.className	= "btn";
-					resetButton.innerHTML 	= "Reset";
 
+				this.reset();
+					
 				this.canvas.width = this.canvas.height = 440;
-				this.canvas.addEventListener('mousedown', function(){
-								var targetElement 	= event.target,
-									px				= event.clientX - targetElement.offsetLeft,
-									py				= event.clientY - targetElement.offsetTop;
 
-									if(px % 140 >= 20 && py % 140 >= 20){
-										var idx = Math.floor(px/140) + (Math.floor(py/140) * 3);
-										currentContext.tiles[idx].setCurrentTile(currentContext.currentPlayer);
-										var result = currentContext.evaluateBoard(currentContext.tiles, currentContext.currentPlayer);
-
-										if(result){
-											currentContext.endGame(result);
-										}
-
-										currentContext.currentPlayer = currentContext.currentPlayer === "X_tile" ? "O_tile" : "X_tile";
-									}
-							});
-			document.body.appendChild(this.canvas);
-			document.body.appendChild(resetButton);
+				
 			this.tick();
+		},
+		setTile : function(tileIdx, newTile){
+			this.tiles[tileIdx].setCurrentTile(newTile);
 		},
 		reset: function(){
 			this.tiles.map(function(x){
 				x.setCurrentTile("BLANK_tile");
-			});
+				});
 			this.currentPlayer = "X_tile";
-		var	modal 				= document.getElementById('modal'),
-			inputFields			= document.getElementById('input'),
-			endGame				= document.getElementById('endgame');
-			endgame.style.display		= "none";
-			modal.style.opacity 		= 1;
-			modal.style.display 		= "inline-block";
-			modal.style.margin			= "auto";
-			inputFields.style.display 	= "inline-block";
-			
 		},
 		draw : function(tile){
 			//console.log(tile.getCurrentTile());
@@ -182,9 +119,10 @@ function gameboard(){
 		evaluateBoard: function(gameStateArray, currentPlayer){
 			var winningStates	= [	"111000000", "000111000", "000000111",
 									"100100100", "001001001", "010010010",
-									"001010100", "100010001" ].map(function(x){
-																	return parseInt(x, 2);
-																}),
+									"001010100", "100010001" ]
+				.map(function(x){
+					return parseInt(x, 2);
+				}),
 				currentState 	= gameStateArray.map(function(x){
 					 if(x.getCurrentTile() === currentPlayer){
 					 	return 1;
@@ -202,13 +140,10 @@ function gameboard(){
 							currentPlayer = "O";
 						}
 						return currentPlayer + " wins!";
-						
-
 					}
 				}
 				if(this.getLegalMoves(gameStateArray).length === 0){
-					return "Tie game!";
-					
+					return "Tie game!";					
 				}
 		},
 		getLegalMoves: function(gameStateArray){
@@ -219,25 +154,117 @@ function gameboard(){
 				} 
 			});
 			return tmpArray;
-		},
-		endGame: function(message){
-			var modal 						= document.getElementById('modal'),
-				endGame						= document.getElementById('endGame'),
-				messageSpot					= document.getElementById('message');
-
-				modal.style.display 		= "inline-block";
-				modal.style.opacity			= 1;
-				endgame.style.opacity		= 1;
-				endgame.style.display		= "inline-block";
-				messageSpot.style.display	= "inline-block";
-				messageSpot.innerHTML 		= message;
 		}
 	}
 }
 
-function aiPlayer(gameboard){
+function aiPlayer(boardObj){
 	return {
-		gameboard : gameboard
+		gameboard 	: boardObj,
+		depth		: this.gameboard.depth,
+		playerTile	: this.gameboard.playerTile,
+		aiTile		: this.gameboard.aiTile,
+
+		minimax		: function(depth, player){
+						//console.log(this);
+						var tmpTiles		= this.gameboard.tiles,
+							legalMoves		= this.gameboard.getLegalMoves(tmpTiles),
+							bestMove		= -1,
+							best			= (player === this.playerTile ? -1000 : 1000);
+
+							if(legalMoves.length === 0 || depth === 0){
+								best = evaluate();
+							} else {
+								for(var i = legalMoves.length; i--;){
+									var move = legalMoves[i];
+									tmpTiles[move].setCurrentTile(player);
+									if(player === this.aiTile){
+										
+										var current = this.mimimax(depth - 1, player);
+											current = current[0];
+										if(current > best){
+											best = current;
+											bestMove = move;
+										}
+									} else {
+										var current = this.minimax(depth - 1, this.aiTile);
+											current = current[0];
+										if(current < best){
+											best = current;
+											bestMove = move;
+										}
+									}
+								}
+							}
+
+							return [best, bestMove];
+					},
+		evaluate	: function(){
+			const moves = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+			var score = 0;
+			for(var i = moves.length; i--;){
+				score += evaluateLine(moves[i]);
+			}
+			return score;
+		},
+		evaluateLine: function(arr){
+			var score = 0;
+			if(this.tmpTiles[arr[0]].equals(this.aiTile)){
+				score = 1;
+			} else if(this.tmpTiles[arr[0]].equals(this.playerTile)){
+				score = -1;
+			}
+
+			if(this.tmpTiles[arr[1]].equals(this.aiTile)){
+				if(score === 1){
+					score = 10;
+				} else if(score === -1){
+					return 0;
+				} else {
+					score = 1;
+				}
+
+			} else if(this.tmpTiles[arr[1]].equals(this.playerTile)){
+				if(score === -1){
+					score = -10;
+				} else if(score === 1){
+					return 0;
+				} else {
+					score = -1;
+				}
+			}
+
+			if(this.tmpTiles[arr[2]].equals(this.aiTile)){
+				if(score > 0){
+					score *= 10;
+				} else if(score < 0){
+					return 0;
+				} else {
+					score = 1;
+				}
+			} else if (this.tmpTiles[arr[2]].equals(this.playerTile)){
+				if(score < 0){
+					score *= 10;
+				} else if(score > 0){
+					return 0;
+				} else {
+					score = -1;
+				}
+			}
+
+			return score;
+		}
+
+	}
+}
+
+function GameController(){
+	return {
+		gameMode		:	null,
+		difficulty		:	0, //Will be a number used as depth for minimax
+		currentPlayer	:	null,
+		playerTile		:	null,
+		aiTile			:	null,
 
 	}
 }
