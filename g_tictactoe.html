@@ -5,11 +5,11 @@
 	<title>Proof of concept - Tic Tac Toe</title>
 	<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
 	<style>
-	*{
-		user-select:none;
-		-webkit-user-select:none;
-		-moz-user-select:none;
-	}
+		*{
+			user-select:none;
+			-webkit-user-select:none;
+			-moz-user-select:none;
+		}
 		canvas{
 			border: 1px solid black;
 			position: absolute;
@@ -26,7 +26,9 @@
 			border-radius: 5px;
 			font-size: 2em;
 		}
-
+		.modal h1{
+			text-align: center;
+		}
 		
 	</style>
 	<script src="tictactoe.js"></script>
@@ -42,7 +44,7 @@
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
-					Play some Tic-Tac-Toe!
+					<h1>Play some Tic-Tac-Toe!</h1>
 				</div>
 				<div class="modal-body">
 					<form id="gameOptions">
@@ -54,10 +56,9 @@
 						</div>
 						<div class="form-group" id="difficulty">
 							<label for="difficulty">
-								<select name="difficulty">
-									<option value="0">Easy</option>
-									<option value="2">Medium</option>
-									<option value="4">Hard</option>								
+								<select name="difficulty" class="form-control">
+									<option value="3">Easy</option>
+									<option value="4" selected>Hard</option>								
 								</select>
 							</label>
 						</div>

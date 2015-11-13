@@ -58,7 +58,6 @@ function Gameboard(){
 			hasData	: function(){
 				 return this.currentTile !== this.BLANK_tile && this.currentTile !== null;
 			}
-
 		}//end returned tile object
 	}
 	return {
@@ -90,7 +89,6 @@ function Gameboard(){
 			});
 		},
 		draw : function(tile){
-			//console.log(tile.getCurrentTile());
 			var currentTile = tile.currentTile,
 				x			= tile.x,
 				y			= tile.y;
@@ -112,18 +110,12 @@ function Gameboard(){
 	}
 }
 
-function aiPlayer(){
-	return {
-
-	}
-}
-
 function GameController(){
 	return{
-		aiOpponent: aiPlayer(),
 		gameboard: Gameboard(),
 		gameMode: null,
 		playerTile: null,
+		aiTile: null,
 		depth: 0,
 		currentPlayer: "X_tile",
 		init: function(){
@@ -141,6 +133,7 @@ function GameController(){
 				controller.gameMode 	= options[0].value;
 				controller.depth		= options[1].value;
 				controller.playerTile 	= options[2].value;
+				controller.aiTile		= controller.playerTile === "X_tile" ? "O_tile" : "X_tile";
 			});
 			this.gameboard.init();
 			$('#resetButton').click(this.resetGame.bind(this));
@@ -154,17 +147,26 @@ function GameController(){
 										if(xPosition % 140 >= 20 && yPosition % 140 >= 20){
 											var idx = Math.floor(xPosition/140) + (Math.floor(yPosition/140) * 3);
 
-											board.setTile(idx, controller.currentPlayer);
-											var result = controller.evaluateBoard(board.tiles, controller.currentPlayer);
+											if(!board.tiles[idx].hasData()){
+												board.setTile(idx, controller.currentPlayer);
+												var result = controller.evaluateBoard(board.tiles, controller.currentPlayer);
 
-											if(result){
-												controller.endGame(result);
-											}
+												if(result){
+													controller.endGame(result);
+												} else {
+													if(controller.gameMode === "1P"){
+														var aiMove = controller.getBestMove(board.tiles, controller.depth);
+														board.setTile(aiMove, controller.aiTile);
+														var result = controller.evaluateBoard(board.tiles, controller.aiTile);
 
-											if(controller.gameMode === "1P"){
+														if(result){
+															controller.endGame(result);
+														}
 
-											} else if(controller.gameMode === "2P"){
-												controller.currentPlayer = controller.currentPlayer === "X_tile" ? "O_tile" : "X_tile";
+													} else if(controller.gameMode === "2P"){
+														controller.currentPlayer = controller.currentPlayer === "X_tile" ? "O_tile" : "X_tile";
+													}
+												}
 											}
 										}
 								});
@@ -204,7 +206,7 @@ function GameController(){
 						return currentPlayer + " wins!";
 					}
 				}
-				if(this.board.getLegalMoves(gameStateArray).length === 0){
+				if(this.getLegalMoves(gameStateArray).length === 0){
 					return "Tie game!";					
 				}
 		},
@@ -216,6 +218,105 @@ function GameController(){
 				} 
 			});
 			return tmpArray;
+		},
+		getBestMove: function(gameStateArray, depth){
+			this.tmpArray = this.gameboard.tiles.slice();
+			var bestIdx = this.minimax(depth, "aiPlayer");
+			this.tmpArray = [];
+			return bestIdx[1];
+		},
+		tmpArray: [],
+		minimax: function(depth, player){
+			var legalMoves	= this.getLegalMoves(this.gameboard.tiles),
+				bestScore	= player === "aiPlayer" ? -10000 : 10000,
+				bestMove	= -1,
+				score		= 0;
+			if(depth == 0 || legalMoves.length == 0){
+				bestScore = this.evaluate(this.tmpArray);
+			} else {
+				if(player === "aiPlayer"){
+				//maximize
+				for(var i = legalMoves.length; i--;){
+					var currentMove = legalMoves[i];
+					this.tmpArray[currentMove].setCurrentTile(this.aiTile);
+					score = this.minimax(depth - 1, "human")[0];
+					if(score > bestScore){
+						bestMove	= currentMove;
+						bestScore 	= score + (depth - 10);
+					}
+					
+					this.tmpArray[currentMove].setCurrentTile("BLANK_tile")
+				}
+				
+				} else {
+					//minimize
+					for(var i = legalMoves.length; i--;){
+						var currentMove = legalMoves[i];
+						this.tmpArray[currentMove].setCurrentTile(this.playerTile)
+						score = this.minimax(depth - 1, "aiPlayer")[0];
+						if(score < bestScore){
+							bestMove	= currentMove;
+							bestScore 	= score + (depth + 10);
+						}
+						
+						this.tmpArray[currentMove].setCurrentTile("BLANK_tile");
+					}
+				}		
+			}
+			return [bestScore, bestMove];
+		},
+		evaluate: function(){
+			const moves = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+			var score = 0;
+			for(var i = moves.length; i--;){
+				score += this.evaluateLine(moves[i]);
+			}
+			return score;
+		},
+		evaluateLine: function(moves){
+			var score = 0;
+			if(this.tmpArray[moves[0]].getCurrentTile() === this.aiTile){
+				score = 1;
+			} else if(this.tmpArray[moves[0]].getCurrentTile() === this.playerTile){
+				score = -1;
+			}
+
+			if(this.tmpArray[moves[1]].getCurrentTile() === this.aiTile){
+				if(score === 1){
+					score = 10;
+				} else if(score === -1){
+					return 0;
+				} else {
+					score = 1;
+				}
+			} else if(this.tmpArray[moves[1]].getCurrentTile() === this.playerTile){
+				if(score === -1){
+					score = -10;
+				} else if(score === 1){
+					return 0;
+				} else {
+					score = -1;
+				}
+			}
+
+			if(this.tmpArray[moves[2]].getCurrentTile() === this.aiTile){
+				if(score > 0){
+					score *= 10;
+				} else if(score < 0){
+					return 0;
+				} else {
+					score = 1;
+				}
+			} else if(this.tmpArray[moves[2]].getCurrentTile() === this.playerTile){
+				if(score < 0){
+					score *= 10;
+				} else if(score > 0){
+					return 0;
+				} else {
+					score = 1;
+				}
+			} 
+			return score;
 		}
 	}
 }
