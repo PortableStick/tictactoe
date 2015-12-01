@@ -1,0 +1,28 @@
+.githubIcon {
+    
+    position: absolute;
+    top: 50px;
+    padding: 12px;
+    border-radius: 5px;
+    font-size: 1.4em;
+
+    &.sitRight {
+        right: 50px;
+    }
+
+    &:before {
+        content: 'Check me out on GitHub!'
+    }
+
+    &.light {
+        background-color: white;
+        border: 1px solid #333;
+        color: #333;
+    }
+
+    &.dark {
+        background-color: #222;
+        border: 1px solid white;
+        color: white;
+    }
+}
