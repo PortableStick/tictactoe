@@ -117,9 +117,11 @@ function GameController() {
     gameMode: null,
     playerTile: null,
     aiTile: null,
-    depth: 0,
+    depth: 4,
     currentPlayer: 'X_tile',
+    gameOver: false,
     init: function() {
+      this.gameOver = false;
       $('#startModal').show();
       $('#gameModeChoice').change(function() {
         if ($('#gameModeChoice option:selected')[0].value === '2P') {
@@ -133,8 +135,7 @@ function GameController() {
         $('#startModal').hide();
         var options = $('#gameOptions').serializeArray();
         this.gameMode = options[0].value;
-        this.depth = options[1].value;
-        this.playerTile = options[2].value;
+        this.playerTile = options[1].value;
         this.aiTile = this.playerTile === 'X_tile' ? 'O_tile' : 'X_tile';   
       }
       this.gameboard.init();
@@ -151,24 +152,18 @@ function GameController() {
         var idx = Math.floor(xPosition / 140) + (Math.floor(yPosition / 140) * 3);
 
         if (!this.gameboard.tiles[idx].hasData()) {
+
           this.gameboard.setTile(idx, this.currentPlayer);
-          var result = this.evaluateBoard(this.gameboard.tiles, this.currentPlayer);
-
-          if (result) {
-            this.endGame(result);
-          } else {
-            if (this.gameMode === '1P') {
-              var aiMove = this.getBestMove(this.gameboard.tiles, this.depth);
-              this.gameboard.setTile(aiMove, this.aiTile);
-              var result = this.evaluateBoard(this.gameboard.tiles, this.aiTile);
-
-              if (result) {
-                this.endGame(result);
-              }
-
-            } else if (this.gameMode === '2P') {
-              this.currentPlayer = this.currentPlayer === 'X_tile' ? 'O_tile' : 'X_tile';
-            }
+          this.checkEndGame(this.currentPlayer);
+          if(this.gameOver === true) {
+            return;
+          }
+          if (this.gameMode === '1P') {
+            var aiMove = this.getBestMove(this.gameboard.tiles, this.depth);
+            this.gameboard.setTile(aiMove, this.aiTile);
+            this.checkEndGame(this.aiTile);
+          } else if (this.gameMode === '2P') {
+            this.currentPlayer = this.currentPlayer === 'X_tile' ? 'O_tile' : 'X_tile';
           }
         }
       }
@@ -176,6 +171,7 @@ function GameController() {
     resetGame: function() {
       this.gameboard.resetBoard();
       this.currentPlayer = 'X_tile';
+      this.gameOver = false;
       $('#startModal').show();
       $('#endModal').hide();
     },
@@ -183,10 +179,27 @@ function GameController() {
       $('#endModal').show();
       $('#endMessage').html(message);
     },
+    checkEndGame: function(player){
+
+      var result = this.evaluateBoard(this.gameboard.tiles, player);
+          if(result) {
+            player = player === 'X_tile' ? 'X' : 'O';
+            this.endGame(player + ' wins!');
+            this.gameOver = true;
+          } else if (this.gameIsTie(this.gameboard.tiles)) {
+            this.endGame('Tie game!');
+            this.gameOver = true;
+          }
+    },
     evaluateBoard: function(gameStateArray, currentPlayer) {
-      var winningStates = ['111000000', '000111000', '000000111',
-          '100100100', '001001001', '010010010',
-          '001010100', '100010001'
+      var winningStates = [ '111000000',
+                            '000111000',
+                            '000000111',
+                            '100100100',
+                            '001001001',
+                            '010010010',
+                            '001010100',
+                            '100010001'
         ].map(function(x) {
           return parseInt(x, 2);
         }),
@@ -201,16 +214,14 @@ function GameController() {
       for (var i = 0; i < winningStates.length; i++) {
         var comparison = winningStates[i] & currentState;
         if (comparison === winningStates[i]) {
-          if (currentPlayer === 'X_tile') {
-            currentPlayer = 'X';
-          } else {
-            currentPlayer = 'O';
-          }
-          return currentPlayer + ' wins!';
+          return true;
         }
       }
-      if (this.getLegalMoves(gameStateArray).length === 0) {
-        return 'Tie game!';
+    },
+    gameIsTie: function(gameStateArray){
+      var legalMoves = this.getLegalMoves(gameStateArray);
+      if(legalMoves.length === 0) {
+        return true;
       }
     },
     getLegalMoves: function(gameStateArray) {
@@ -224,15 +235,15 @@ function GameController() {
     },
     getBestMove: function(gameStateArray, depth) {
       this.tmpArray = this.gameboard.tiles.slice();
-      var bestIdx = this.minimax(depth, 'aiPlayer');
+      var bestIdx = this.minimax(depth, 'aiPlayer')[1];
       this.tmpArray = [];
-      return bestIdx[1];
+      return bestIdx;
     },
     tmpArray: [],
     minimax: function(depth, player) {
       var legalMoves = this.getLegalMoves(this.gameboard.tiles),
-          bestScore = player === 'aiPlayer' ? -10000000 : 10000000,
           bestMove = -1,
+          bestScore = (player === 'aiPlayer' ? -10000000000 : 10000000000)
           score = 0;
       if (depth === 0 || legalMoves.length === 0) {
         bestScore = this.evaluate(this.tmpArray);
@@ -241,23 +252,34 @@ function GameController() {
           var currentMove = legalMoves[i];
           if (player === 'aiPlayer') {
             this.tmpArray[currentMove].setCurrentTile(this.aiTile);
-            score = this.minimax(depth - 1, 'human')[0];
-            if (score > bestScore) {
+            var result = this.evaluateBoard(this.tmpArray, this.aiTile);
+            if(result === true) {
+              bestScore = 100000000000;
               bestMove = currentMove;
-              bestScore = score;
+            } else {
+              score = this.minimax(depth - 1, 'human')[0];
+              if (score > bestScore) {
+                bestMove = currentMove;
+                bestScore = score;
+              }
             }
           } else if (player === 'human') {
             this.tmpArray[currentMove].setCurrentTile(this.playerTile);
-            score = this.minimax(depth - 1, 'aiPlayer')[0];
-            if (score < bestScore) {
+            var result = this.evaluateBoard(this.tmpArray, this.playerTile);
+            if(result === true) {
+              bestScore = -100000000000;
               bestMove = currentMove;
-              bestScore = score;
-            }
+            } else {
+              score = this.minimax(depth - 1, 'aiPlayer')[0];
+              if (score < bestScore) {
+                bestMove = currentMove;
+                bestScore = score;
+              }
+            }  
           }
           this.tmpArray[currentMove].setCurrentTile('BLANK_tile');
         }
       }
-
       return [bestScore, bestMove];
     },
     evaluate: function() {
@@ -272,61 +294,62 @@ function GameController() {
         [2, 4, 6]
       ];
       var score = 0;
-      for (var i = moves.length - 1; i--;) {
+      for (var i = moves.length; i--;) {
         score += this.evaluateLine(moves[i]);
       }
       return score;
     },
     evaluateLine: function(moves) {
       var score = 0,
-          line = [
-          this.tmpArray[moves[0]].getCurrentTile(),
-          this.tmpArray[moves[1]].getCurrentTile(),
-          this.tmpArray[moves[2]].getCurrentTile()
-        ];
+          MaximizingToken  = this.aiTile,
+          MinimizingToken = this.playerTile, 
+          firstTile = this.tmpArray[moves[0]].getCurrentTile(),
+          secondTile = this.tmpArray[moves[1]].getCurrentTile(),
+          thirdTile = this.tmpArray[moves[2]].getCurrentTile();
+        
+          if (firstTile === MaximizingToken) {
+              score = 1;
+            } else if (firstTile === MinimizingToken) {
+              score = -1;
+            }
 
-      if (line[0] === this.aiTile) {
-        score = 1;
-      } else if (line[0] === this.playerTile) {
-        score = -1;
-      }
+          if (secondTile === MaximizingToken) {
+              if (score === 1) {
+                 score = 10;
+              } else if (score === -1) {
+                return 0;
+              } else {
+                score = 1;
+              }
+            } else if (secondTile === MinimizingToken) {
+              if (score === -1) {
+                score = -10;
+              } else if (score === 1) {
+                return 0;
+              } else {
+                score = -1;
+              }
+            }
 
-      if (line[1] === this.aiTile) {
-        if (score === 1) {
-          score *= 10;
-        } else if (score === -1) {
-          return 0;
-        } else {
-          score = 1;
-        }
-      } else if (line[1] === this.playerTile) {
-        if (score === -1) {
-          score *= -10;
-        } else if (score === 1) {
-          return 0;
-        } else {
-          score = -1;
-        }
-      }
-
-      if (line[2] === this.aiTile) {
-        if (score > 0) {
-          score *= 100;
-        } else if (score < 0) {
-          return 0;
-        } else {
-          score = 1;
-        }
-      } else if (line[2] === this.playerTile) {
-        if (score < 0) {
-          score *= 100;
-        } else if (score > 0) {
-          return 0;
-        } else {
-          score = 1;
-        }
-      }
-      return score;
+          if (thirdTile === MaximizingToken) {
+              if (score > 0) {
+                score *= 10;
+              } else if (score < 0) {
+                return 0;
+              } else {
+                score = 1;
+              }
+            } else if (thirdTile === MinimizingToken) {
+              if (score < 0) {
+                score *= 10;
+              } else if (score > 0) {
+                return 0;
+              } else {
+                score = -1;
+              }
+            }
+            return score; 
+             
     }
   }
 }
