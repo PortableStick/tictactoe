@@ -348,8 +348,7 @@ function GameController() {
                 score = -1;
               }
             }
-            return score; 
-             
+            return score;            
     }
   }
 }
